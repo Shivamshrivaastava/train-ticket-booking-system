@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 exports.signup = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Incoming body:", req.body);
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ msg: "Email already exists" });
 
