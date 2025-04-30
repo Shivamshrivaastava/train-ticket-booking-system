@@ -94,6 +94,19 @@ Additional features include:
 - **Response**:
   - **Success**: `200 OK` with confirmation of reset.
   - **Error**: `500 Internal Server Error` if something goes wrong.
+ 
+    **Route**: `/api/seats/available`  
+**Method**: `GET`
+
+#### Description:
+This API endpoint is used to fetch a list of all available seats in the train. It returns the seats that are not yet booked, along with relevant seat details such as seat number, booking status, and the user who has booked the seat (if any).
+
+#### Request:
+
+- **Method**: `GET`
+- **URL**: `https://train-ticket-booking-system-v94x.onrender.com/api/seats/available`
+  
+No additional parameters are required in the request.
 
 ---
 
