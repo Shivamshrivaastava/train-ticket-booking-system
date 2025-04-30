@@ -1,22 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-export default function SeatGrid() {
-  const [seats, setSeats] = useState(() => {
-    // Generate 80 seats (Assuming 80 seats in total)
-    const allSeats = [];
-    for (let i = 1; i <= 80; i++) {
-      allSeats.push({ seatNumber: i, isBooked: false });
-    }
-    return allSeats;
-  });
+const SeatGrid = () => {
+  const [seats, setSeats] = useState([]);
   const [count, setCount] = useState(1);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const token = localStorage.getItem('token');
 
-  const isCoachFull = seats.every(seat => seat.isBooked);  // Check if all seats are booked
+  // Load seat data from backend
+  const loadSeats = async () => {
+    try {
+      const response = await fetch('https://train-ticket-booking-system-v94x.onrender.com/api/seats/available');
+      const data = await response.json();
+      setSeats(data);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load seat data');
+    }
+  };
 
-  // Handle booking a seat
-  const handleBook = () => {
+  useEffect(() => {
+    loadSeats();
+  }, []);
+
+  // Book seats
+  const handleBook = async () => {
     setError('');
     setMessage('');
 
@@ -25,62 +33,63 @@ export default function SeatGrid() {
       return;
     }
 
-    if (isCoachFull) {
-      setError('The coach is full. No more bookings allowed.');
+    if (!token) {
+      setError('You must be logged in to book seats');
       return;
     }
 
-    let bookedSeats = [];
-    let updatedSeats = [...seats];
+    try {
+      const response = await fetch('https://train-ticket-booking-system-v94x.onrender.com/api/seats/book', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ count }),
+      });
 
-    // Try to book the seats in the same row first
-    let bookedCount = 0;
-    let startIndex = -1;
-    
-    // Try to find consecutive empty seats in one row
-    for (let i = 0; i < 12; i++) { // There are 12 rows in total
-      const rowSeats = updatedSeats.slice(i * 7, i * 7 + (i === 11 ? 3 : 7)); // Last row has only 3 seats
-      const emptySeats = rowSeats.filter(seat => !seat.isBooked);
-      if (emptySeats.length >= count) {
-        startIndex = rowSeats.findIndex(seat => !seat.isBooked);
-        for (let j = startIndex; j < startIndex + count; j++) {
-          updatedSeats[i * 7 + j].isBooked = true;
-          bookedSeats.push(updatedSeats[i * 7 + j].seatNumber);
-        }
-        break;
-      }
-    }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.msg || 'Booking failed');
 
-    // If not enough consecutive seats in one row, book across rows
-    if (bookedSeats.length === 0) {
-      bookedCount = 0;
-      for (let i = 0; i < updatedSeats.length; i++) {
-        if (!updatedSeats[i].isBooked) {
-          updatedSeats[i].isBooked = true;
-          bookedSeats.push(updatedSeats[i].seatNumber);
-          bookedCount++;
-          if (bookedCount === count) break;
-        }
-      }
-    }
-
-    // If we were able to book the required number of seats
-    if (bookedSeats.length === count) {
-      setSeats(updatedSeats);
-      setMessage(`Booked seats: ${bookedSeats.join(', ')}`);
-    } else {
-      setError('Not enough available seats to book');
+      setMessage(`Booked seats: ${data.seats.join(', ')}`);
+      await loadSeats();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  // Reset all seats to unbooked
-  const handleReset = () => {
-    const resetSeats = seats.map(seat => ({ ...seat, isBooked: false }));
-    setSeats(resetSeats);
-    setMessage('All seats have been reset.');
+  // Reset all seats
+  const handleReset = async () => {
+    setError('');
+    setMessage('');
+
+    if (!token) {
+      setError('You must be logged in to reset seats');
+      return;
+    }
+
+    try {
+      const response = await fetch('https://train-ticket-booking-system-v94x.onrender.com/api/seats/reset', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.msg || 'Reset failed');
+
+      setMessage(data.msg);
+      await loadSeats();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  // Row structure: 11 rows of 7, 1 row of 3 (Total 80 seats)
+  // Calculate remaining (unbooked) seats
+  const remainingSeats = seats.filter(seat => !seat.isBooked).length;
+
+  // Build rows for UI
   const rowPattern = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 3];
   const rows = [];
   let index = 0;
@@ -90,7 +99,7 @@ export default function SeatGrid() {
   }
 
   return (
-    <div>
+    <div className="p-6">
       <div className="mb-4 text-center">
         <label htmlFor="count" className="font-semibold">Number of seats to book:</label>
         <input
@@ -111,14 +120,8 @@ export default function SeatGrid() {
               key={seat.seatNumber}
               title={`Seat ${seat.seatNumber}`}
               className={`w-10 h-10 m-1 flex items-center justify-center text-sm rounded 
-                ${seat.isBooked ? 'bg-red-400 text-white' : 'bg-green-200 hover:bg-green-400'} 
-                border border-gray-500 cursor-pointer`}
-              onClick={() => {
-                if (!seat.isBooked) {
-                  seat.isBooked = true;
-                  setSeats([...seats]);
-                }
-              }}
+                ${seat.isBooked ? 'bg-red-400 text-white' : 'bg-green-200'} 
+                border border-gray-500`}
             >
               {seat.seatNumber}
             </div>
@@ -126,13 +129,31 @@ export default function SeatGrid() {
         </div>
       ))}
 
-      <div className="text-center mt-6">
-        <button onClick={handleBook} className="bg-blue-600 text-white px-4 py-2 rounded mr-2">Book Seats</button>
-        <button onClick={handleReset} className="bg-gray-600 text-white px-4 py-2 rounded">Reset All</button>
+      <div className="text-center mt-6 space-x-2">
+        <button
+          onClick={handleBook}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Book Seats
+        </button>
+        <button
+          onClick={handleReset}
+          className="bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Reset All
+        </button>
+        <button
+          disabled
+          className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold cursor-default"
+        >
+          Remaining Seats: {remainingSeats}
+        </button>
       </div>
 
       {error && <div className="text-red-600 text-center mt-4">{error}</div>}
       {message && <div className="text-green-600 text-center mt-4">{message}</div>}
     </div>
   );
-}
+};
+
+export default SeatGrid;

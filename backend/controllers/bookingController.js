@@ -39,4 +39,13 @@ exports.getAvailableSeats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+exports.getRemainingSeatsCount = async (req, res) => {
+  try {
+    const count = await Seat.countDocuments({ isBooked: false });
+    res.json({ remainingSeats: count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
