@@ -22,6 +22,7 @@ Additional features include:
 
    - The backend deployed at  - https://train-ticket-booking-system-v94x.onrender.com
    - The frontend deployed at  - https://new-seat-booking.netlify.app/
+   - WalkThrough of project at -  https://youtu.be/1FMUnv7dWSI
 
 ---
 
