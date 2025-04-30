@@ -202,7 +202,7 @@ Ensure you have the following installed:
 6. **Access the Application**
 
    - The backend deployed at `https://train-ticket-booking-system-v94x.onrender.com`.
-   - The frontend deployed at `https://newseatbooking.netlify.app/`.
+   - The frontend deployed at `https://new-seat-booking.netlify.app/`.
 
 ---
 
