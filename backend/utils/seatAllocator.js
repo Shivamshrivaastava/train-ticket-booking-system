@@ -1,42 +1,51 @@
 exports.allocateSeats = (availableSeats, count) => {
   const ROW_SIZE = 7;
-  const MAX_SEATS = 80;
+  const TOTAL_SEATS = 80;
 
-  // Step 1: Group available seats by rows
+  // Group available seats by row
+  const rowPattern = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 3];
   const rows = {};
-  for (let seat of availableSeats) {
-    const row = seat.seatNumber <= 77 ? Math.ceil(seat.seatNumber / ROW_SIZE) : 12; // 12th row = seat 78–80
-    if (!rows[row]) rows[row] = [];
-    rows[row].push(seat);
-  }
+  let index = 1;
 
-  // Step 2: Try to find `count` consecutive seats in the same row (Sliding Window Approach)
-  for (let rowSeats of Object.values(rows)) {
-    rowSeats.sort((a, b) => a.seatNumber - b.seatNumber);
-    for (let i = 0; i <= rowSeats.length - count; i++) {
-      let group = rowSeats.slice(i, i + count); // Sliding window of `count` seats
-      // Check if the seats are consecutive
-      if (group[group.length - 1].seatNumber - group[0].seatNumber + 1 === count) {
-        return group;
+  rowPattern.forEach((length, rowIndex) => {
+    rows[rowIndex + 1] = [];
+    for (let i = 0; i < length; i++) {
+      const seat = availableSeats.find(s => s.seatNumber === index);
+      if (seat) {
+        rows[rowIndex + 1].push(seat);
+      }
+      index++;
+    }
+  });
+
+  // 1. Try to find consecutive seats in the same row
+  for (const row of Object.values(rows)) {
+    row.sort((a, b) => a.seatNumber - b.seatNumber);
+    for (let i = 0; i <= row.length - count; i++) {
+      const group = row.slice(i, i + count);
+      const isConsecutive = group.every((seat, idx) =>
+        idx === 0 || seat.seatNumber === group[idx - 1].seatNumber + 1
+      );
+      if (isConsecutive) {
+        return { seats: group, isConsecutive: true };
       }
     }
   }
 
-  // Step 3: If not enough consecutive seats in one row, try to book nearest available seats
-  let bookedSeats = [];
-  let remainingSeats = count;
-
-  // Sort seats by seat number
+  // 2. Fallback: find nearest available seats globally
   availableSeats.sort((a, b) => a.seatNumber - b.seatNumber);
 
-  // Loop to find nearest seats across rows (fallback approach)
-  for (let seat of availableSeats) {
-    if (remainingSeats > 0) {
-      bookedSeats.push(seat);
-      remainingSeats--;
+  let minSpread = Infinity;
+  let bestGroup = [];
+
+  for (let i = 0; i <= availableSeats.length - count; i++) {
+    const group = availableSeats.slice(i, i + count);
+    const spread = group[count - 1].seatNumber - group[0].seatNumber;
+    if (spread < minSpread) {
+      minSpread = spread;
+      bestGroup = group;
     }
-    if (remainingSeats === 0) break;
   }
 
-  return bookedSeats;
+  return { seats: bestGroup, isConsecutive: false };
 };
