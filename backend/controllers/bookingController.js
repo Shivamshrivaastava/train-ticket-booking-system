@@ -31,3 +31,12 @@ exports.resetSeats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+exports.getAvailableSeats = async (req, res) => {
+  try {
+    const seats = await Seat.find({}, 'seatNumber isBooked').sort('seatNumber');
+    res.json(seats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
