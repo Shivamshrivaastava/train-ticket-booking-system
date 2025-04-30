@@ -12,7 +12,7 @@ export const login = async (credentials) => {
 
 // Register function
 export const signup = async (credentials) => {
-    const response = await API.post('/auth/signup', credentials);  // Correct route
+    const response = await API.post('/auth/signup', credentials);  
     return response.data;
   };
 
