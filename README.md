@@ -18,6 +18,12 @@ Additional features include:
 - **Seat reservation management** to prevent double booking of the same seat.
 
 ---
+6. **Access the Application**
+
+   - The backend deployed at  - https://train-ticket-booking-system-v94x.onrender.com
+   - The frontend deployed at  - https://new-seat-booking.netlify.app/
+
+---
 
 ## Tech Stack
 
@@ -212,12 +218,7 @@ Ensure you have the following installed:
    npm start
    ```
 
-6. **Access the Application**
 
-   - The backend deployed at  - https://train-ticket-booking-system-v94x.onrender.com`.
-   - The frontend deployed at  - https://new-seat-booking.netlify.app/`.
-
----
 
 ## API Documentation
 
